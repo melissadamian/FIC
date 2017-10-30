@@ -5,6 +5,9 @@
 #include "opencv2/highgui/highgui.hpp"
 //#include <opencv2\cv.h>
 #include "opencv2/opencv.hpp"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 using namespace std;
 using namespace cv;
@@ -182,7 +185,7 @@ int main(int argc, char* argv[])
 	//program
 	bool trackObjects = true;
 	bool useMorphOps = true;
-
+/*
 	Point p;
 	//Matrix to store each frame of the webcam feed
 	Mat cameraFeed;
@@ -193,52 +196,85 @@ int main(int argc, char* argv[])
 	//x and y values for the location of the object
 	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 	//create slider bars for HSV filtering
-	createTrackbars();
+	createTrackbars();*/
 	//video capture object to acquire webcam feed
-	VideoCapture capture;
+	//VideoCapture capture;
 	//open capture object at location zero (default location for webcam)
-	capture.open("rtmp://172.16.254.99/live/nimic");
+	//capture.open("rtmp://172.16.254.99/live/nimic");
 	//set height and width of capture frame
-	capture.set(CV_CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
-	capture.set(CV_CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
+	//capture.set(CV_CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
+	//capture.set(CV_CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
 	//start an infinite loop where webcam feed is copied to cameraFeed matrix
 	//all of our operations will be performed within this loop
 
 
 
 	
-	while (1) {
+	/*while (1) {
 
 
 		//store image to matrix
 		capture.read(cameraFeed);
-		//convert frame from BGR to HSV colorspace
-		cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
-		//filter HSV image between values and store filtered image to
-		//threshold matrix
-		inRange(HSV, Scalar(165, 50, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold1);
-    inRange(HSV, Scalar(30, 80, V_MIN), Scalar(35, S_MAX, V_MAX), threshold2);
-		//perform morphological operations on thresholded image to eliminate noise
-		//and emphasize the filtered object(s)
-		if (useMorphOps)
-			morphOps(threshold1);
-			morphOps(threshold2);
-		//pass in thresholded frame to our object tracking function
-		//this function will return the x and y coordinates of the
-		//filtered object
-		if (trackObjects)
-			trackFilteredObject(x1, y1, threshold1, cameraFeed);
-      trackFilteredObject(x2, y2, threshold2, cameraFeed);
-		//show frames
-		imshow(windowName2, threshold1);
-    imshow(windowName2, threshold2);
-		imshow(windowName, cameraFeed);
-		//imshow(windowName1, HSV);
-		setMouseCallback("Original Image", on_mouse, &p);
-		//delay 30ms so that screen can refresh.
-		//image will not appear without this waitKey() command
-		waitKey(30);
-	}
+    if(cameraFeed.empty()){
+  		//convert frame from BGR to HSV colorspace
+  		cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
+  		//filter HSV image between values and store filtered image to
+  		//threshold matrix
+  		inRange(HSV, Scalar(165, 50, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold1);
+      inRange(HSV, Scalar(30, 80, V_MIN), Scalar(35, S_MAX, V_MAX), threshold2);
+  		//perform morphological operations on thresholded image to eliminate noise
+  		//and emphasize the filtered object(s)
+  		if (useMorphOps)
+  			morphOps(threshold1);
+  			morphOps(threshold2);
+  		//pass in thresholded frame to our object tracking function
+  		//this function will return the x and y coordinates of the
+  		//filtered object
+  		if (trackObjects)
+  			trackFilteredObject(x1, y1, threshold1, cameraFeed);
+        trackFilteredObject(x2, y2, threshold2, cameraFeed);
+  		//show frames
+  		imshow(windowName2, threshold1);
+      imshow(windowName2, threshold2);
+  		imshow(windowName, cameraFeed);
+  		//imshow(windowName1, HSV);
+  		setMouseCallback("Original Image", on_mouse, &p);
+  		//delay 30ms so that screen can refresh.
+  		//image will not appear without this waitKey() command
+  		waitKey(30);
+   }
+	}*/
+    struct sockaddr_in address;
+    int sock = 0;
+    struct sockaddr_in serv_addr;
+    char buffer[1024] = {0};
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n Socket creation error \n");
+        return -1;
+    }
+  
+    memset(&serv_addr, '0', sizeof(serv_addr));
+  
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(20232); //PORT
+      
+    // Convert IPv4 and IPv6 addresses from text to binary form
+    inet_pton(AF_INET, "193.226.12.217", &serv_addr.sin_addr);
+  
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        printf("\nConnection Failed \n");
+        return -1;
+    }
+    int s;
+    s=send(sock , "s" , 1 , 0 );
+    if (s==-1){
+      printf("Error");
+      exit(1);
+    }
+    //send(sock , "r" , 1 , 0 );
+    //send(sock , "l" , 1 , 0 );
 
 	return 0;
 }
