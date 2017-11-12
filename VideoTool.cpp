@@ -8,6 +8,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace cv;
@@ -178,6 +182,47 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed) {
 		else putText(cameraFeed, "TOO MUCH NOISE! ADJUST FILTER", Point(0, 50), 1, 2, Scalar(0, 0, 255), 2);
 	}
 }
+
+void control(char* command){
+	struct sockaddr_in address;
+	int sock = 0, valread, i, l;
+	struct sockaddr_in serv_addr;
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
+		printf("\n Socket creation error \n");
+		exit(EXIT_FAILURE);
+	}
+	memset(&serv_addr, '0', sizeof(serv_addr));
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(20232);
+	// Convert IPv4 and IPv6 addresses from text to binary form
+	if(inet_pton(AF_INET, "193.226.12.217", &serv_addr.sin_addr)<=0) {
+		printf("\nInvalid address/ Address not supported \n");
+		exit(EXIT_FAILURE);
+	}
+	if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){
+		printf("\nConnection Failed \n");
+		exit(EXIT_FAILURE);
+	}
+	int l = strlen(command);
+	char valid[6] = "fbrls";
+	for(i=0;i<len;i++){
+		if(strchr(valid, command[i])){
+			char buf[2];
+			sprintf(buf,"%c",command[i]);
+			int s = send(sock ,buf , 1 , 0);
+			if(s == -1)
+			printf("Error");
+			usleep(1000000);
+		}
+	}
+	int s = send(sock , "s" , 1 , 0);
+	if(s == -1)
+		printf("Error");
+
+}
+
+
+
 int main(int argc, char* argv[])
 {
 
@@ -244,38 +289,11 @@ int main(int argc, char* argv[])
   		waitKey(30);
    }
 	}*/
-    struct sockaddr_in address;
-    int sock = 0;
-    struct sockaddr_in serv_addr;
-    char buffer[1024] = {0};
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        printf("\n Socket creation error \n");
-        return -1;
-    }
-  
-    memset(&serv_addr, '0', sizeof(serv_addr));
-  
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(20232); //PORT
-      
-    // Convert IPv4 and IPv6 addresses from text to binary form
-    inet_pton(AF_INET, "193.226.12.217", &serv_addr.sin_addr);
-  
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        printf("\nConnection Failed \n");
-        return -1;
-    }
-    int s;
-    s=send(sock , "s" , 1 , 0 );
-    if (s==-1){
-      printf("Error");
-      exit(1);
-    }
-    //send(sock , "r" , 1 , 0 );
-    //send(sock , "l" , 1 , 0 );
 
+	char a[30] = "flprsbsfrlrbs";
+	control(a);
+
+	
 	return 0;
 }
 
