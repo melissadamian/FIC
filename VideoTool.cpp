@@ -185,7 +185,7 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed) {
 
 void control(char* command){
 	struct sockaddr_in address;
-	int sock = 0, valread, i, l;
+	int sock = 0, valread, i;
 	struct sockaddr_in serv_addr;
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
 		printf("\n Socket creation error \n");
@@ -205,7 +205,7 @@ void control(char* command){
 	}
 	int l = strlen(command);
 	char valid[6] = "fbrls";
-	for(i=0;i<len;i++){
+	for(i=0;i<l;i++){
 		if(strchr(valid, command[i])){
 			char buf[2];
 			sprintf(buf,"%c",command[i]);
@@ -215,12 +215,22 @@ void control(char* command){
 			usleep(1000000);
 		}
 	}
-	int s = send(sock , "s" , 1 , 0);
-	if(s == -1)
-		printf("Error");
+	//int s = send(sock , "s" , 1 , 0);
+	//if(s == -1)
+	//	printf("Error");
 
 }
 
+int isOnTrack(int x1, int y1, int x2, int y2, int x3, int y3) {
+  double x, y, eps = 0.1; //set
+  if (((x2 - x1) == 0) || ((y2 - y1) == 0))
+    return 0;
+  x = (x3 - x1) / (x2 - x1);
+  y = (y3 - y1) / (y2 - y1);
+  if (abs(x - y) < eps)
+    return 1;
+  return 0;
+}
 
 
 int main(int argc, char* argv[])
@@ -230,70 +240,82 @@ int main(int argc, char* argv[])
 	//program
 	bool trackObjects = true;
 	bool useMorphOps = true;
-/*
+
 	Point p;
 	//Matrix to store each frame of the webcam feed
 	Mat cameraFeed;
 	//matrix storage for HSV image
 	Mat HSV;
 	//matrix storage for binary threshold image
-	Mat threshold1, threshold2;
+	Mat threshold1, threshold2, threshold3;
 	//x and y values for the location of the object
-	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+	int x1 = 0, y1 = 0, x2 = 0, y2 = 0, x3 = 0, y3 = 0;
 	//create slider bars for HSV filtering
-	createTrackbars();*/
+	createTrackbars();
 	//video capture object to acquire webcam feed
-	//VideoCapture capture;
+	VideoCapture capture;
 	//open capture object at location zero (default location for webcam)
-	//capture.open("rtmp://172.16.254.99/live/nimic");
+	capture.open("rtmp://172.16.254.99/live/nimic");
 	//set height and width of capture frame
-	//capture.set(CV_CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
-	//capture.set(CV_CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
+	capture.set(CV_CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
+	capture.set(CV_CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
 	//start an infinite loop where webcam feed is copied to cameraFeed matrix
 	//all of our operations will be performed within this loop
 
 
 
 	
-	/*while (1) {
-
-
-		//store image to matrix
-		capture.read(cameraFeed);
-    if(cameraFeed.empty()){
-  		//convert frame from BGR to HSV colorspace
-  		cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
-  		//filter HSV image between values and store filtered image to
-  		//threshold matrix
-  		inRange(HSV, Scalar(165, 50, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold1);
+  while (1) {
+    //store image to matrix
+    capture.read(cameraFeed);
+    if(cameraFeed.empty()) {
+      printf("here\n");
+      //convert frame from BGR to HSV colorspace
+      cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
+      //filter HSV image between values and store filtered image to
+      //threshold matrix
+      inRange(HSV, Scalar(165, 50, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold1);
       inRange(HSV, Scalar(30, 80, V_MIN), Scalar(35, S_MAX, V_MAX), threshold2);
-  		//perform morphological operations on thresholded image to eliminate noise
-  		//and emphasize the filtered object(s)
-  		if (useMorphOps)
-  			morphOps(threshold1);
-  			morphOps(threshold2);
-  		//pass in thresholded frame to our object tracking function
-  		//this function will return the x and y coordinates of the
-  		//filtered object
-  		if (trackObjects)
-  			trackFilteredObject(x1, y1, threshold1, cameraFeed);
+      inRange(HSV, Scalar(0, 0, V_MIN), Scalar(0, S_MAX, V_MAX), threshold3);
+      //perform morphological operations on thresholded image to eliminate noise
+      //and emphasize the filtered object(s)
+      if (useMorphOps) {
+        morphOps(threshold1);
+        morphOps(threshold2);
+        morphOps(threshold3);
+      }
+      //pass in thresholded frame to our object tracking function
+      //this function will return the x and y coordinates of the
+      //filtered object
+      if (trackObjects) {
+        trackFilteredObject(x1, y1, threshold1, cameraFeed);
         trackFilteredObject(x2, y2, threshold2, cameraFeed);
-  		//show frames
-  		imshow(windowName2, threshold1);
+        trackFilteredObject(x3, y3, threshold3, cameraFeed);
+      }
+      
+      
+      /*if (isOnTrack(x1, y1, x2, y2, x3, y3)) {
+        if (abs(x1 - x2) > abs(x3 - x2)) {
+          control("f");
+        }
+        else {
+          control("b");
+        }
+      }*/
+      
+      
+      //show frames
+      imshow(windowName2, threshold1);
       imshow(windowName2, threshold2);
-  		imshow(windowName, cameraFeed);
-  		//imshow(windowName1, HSV);
-  		setMouseCallback("Original Image", on_mouse, &p);
-  		//delay 30ms so that screen can refresh.
-  		//image will not appear without this waitKey() command
-  		waitKey(30);
-   }
-	}*/
-
-	char a[30] = "flprsbsfrlrbs";
-	control(a);
-
-	
+      imshow(windowName2, threshold3);
+      imshow(windowName, cameraFeed);
+      //imshow(windowName1, HSV);
+      setMouseCallback("Original Image", on_mouse, &p);
+      //delay 30ms so that screen can refresh.
+      //image will not appear without this waitKey() command
+      waitKey(30);
+    }
+  }
 	return 0;
 }
 
