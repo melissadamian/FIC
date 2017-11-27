@@ -65,14 +65,6 @@ void createTrackbars() {
 
 
 	namedWindow(trackbarWindowName, 0);
-	//create memory to store trackbar name on window
-	char TrackbarName[50];
-	sprintf(TrackbarName, "H_MIN", H_MIN);
-	sprintf(TrackbarName, "H_MAX", H_MAX);
-	sprintf(TrackbarName, "S_MIN", S_MIN);
-	sprintf(TrackbarName, "S_MAX", S_MAX);
-	sprintf(TrackbarName, "V_MIN", V_MIN);
-	sprintf(TrackbarName, "V_MAX", V_MAX);
 	//create trackbars and insert them into window
 	//3 parameters are: the address of the variable that is changing when the trackbar is moved(eg.H_LOW),
 	//the max value the trackbar can move (eg. H_HIGH),
@@ -268,8 +260,7 @@ int main(int argc, char* argv[])
   while (1) {
     //store image to matrix
     capture.read(cameraFeed);
-    if(cameraFeed.empty()) {
-      printf("here\n");
+    if(!cameraFeed.empty()) {
       //convert frame from BGR to HSV colorspace
       cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
       //filter HSV image between values and store filtered image to
