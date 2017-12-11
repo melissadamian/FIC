@@ -175,7 +175,7 @@ void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed) {
 	}
 }
 
-void control(char* command){
+void control(char const* command){
 	struct sockaddr_in address;
 	int sock = 0, valread, i;
 	struct sockaddr_in serv_addr;
@@ -203,8 +203,8 @@ void control(char* command){
 			sprintf(buf,"%c",command[i]);
 			int s = send(sock ,buf , 1 , 0);
 			if(s == -1)
-			printf("Error");
-			usleep(1000000);
+			  printf("Error");
+			//usleep(1000000);
 		}
 	}
 	//int s = send(sock , "s" , 1 , 0);
@@ -265,9 +265,9 @@ int main(int argc, char* argv[])
       cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
       //filter HSV image between values and store filtered image to
       //threshold matrix
-      inRange(HSV, Scalar(165, 50, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold1);
-      inRange(HSV, Scalar(30, 80, V_MIN), Scalar(35, S_MAX, V_MAX), threshold2);
-      inRange(HSV, Scalar(0, 0, V_MIN), Scalar(0, S_MAX, V_MAX), threshold3);
+      inRange(HSV, Scalar(165, 50, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold1); //set
+      inRange(HSV, Scalar(30, 80, V_MIN), Scalar(35, S_MAX, V_MAX), threshold2); //set
+      inRange(HSV, Scalar(0, 0, V_MIN), Scalar(0, S_MAX, V_MAX), threshold3);  //set
       //perform morphological operations on thresholded image to eliminate noise
       //and emphasize the filtered object(s)
       if (useMorphOps) {
@@ -285,14 +285,19 @@ int main(int argc, char* argv[])
       }
       
       
-      /*if (isOnTrack(x1, y1, x2, y2, x3, y3)) {
+      if (isOnTrack(x1, y1, x2, y2, x3, y3)) {
         if (abs(x1 - x2) > abs(x3 - x2)) {
           control("f");
         }
         else {
           control("b");
         }
-      }*/
+      }
+      else {
+        control("r");
+        usleep(1000); //set
+        control("s");
+      }
       
       
       //show frames
